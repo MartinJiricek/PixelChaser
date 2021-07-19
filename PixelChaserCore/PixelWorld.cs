@@ -34,9 +34,9 @@ namespace PixelChaser
         public double MaxPixelSpeed { get; set; } = 10;
         public int MaxUnitsPerRow { get; set; } = 20;
 
-        private double _areaDensityFactor = 10;
-        private double _densityHysteresis = 2;
-        public double AreaDensityFactor
+        private float _areaDensityFactor = 1;
+        private float _densityHysteresis = 0;
+        public float AreaDensityFactor
         {
             get { return _rdm.Next((int)(_areaDensityFactor-DensityHysteresis),(int)( _areaDensityFactor + DensityHysteresis)); }
             set
@@ -47,7 +47,7 @@ namespace PixelChaser
                     _areaDensityFactor = value;
             }
         }
-        public double DensityHysteresis
+        public float DensityHysteresis
         {
             get { return _densityHysteresis; }
             set
@@ -66,6 +66,11 @@ namespace PixelChaser
             Width = width;
             Height = height;
             Generator = new PixelGenerator(this);
+        }
+
+        public void ClearPixels()
+        {
+            PixelUnits.Clear();        
         }
 
         public void MoveDown()

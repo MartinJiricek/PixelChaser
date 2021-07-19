@@ -81,6 +81,8 @@ namespace PixelChaser
         public VelocityDirection Direction { get; set; } = VelocityDirection.RightToLeft;
         public int MaxVelocityExtension { get; set; } = 5;
 
+        public bool Enabled { get; set; } = true;
+
         public int MinA { get; set; } = 0;
         public int MaxA { get; set; } = 255;
         public int MinR { get; set; } = 0;
@@ -135,16 +137,18 @@ namespace PixelChaser
         }
         public void GeneratePixelUnits()
         {
+            if(Enabled)
             GeneratePixelUnits(_rdm.Next(MinBatchSize,MaxBatchSize));
         }
 
         public void GeneratePixelUnits(int batchSize)
         {
-
-            for(int i = 0; i < batchSize;i++)
-            {
-                World.PixelUnits.Add(GetRandomPixelUnit());
-            }
+            if (Enabled)
+                for (int i = 0; i < batchSize; i++)
+                {
+                    if (Enabled)
+                        World.PixelUnits.Add(GetRandomPixelUnit());
+                }
 
         }
 

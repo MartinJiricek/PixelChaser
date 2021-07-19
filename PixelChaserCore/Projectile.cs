@@ -8,13 +8,12 @@ namespace PixelChaser
 {
     public class Projectile
     {
-        public double X { get; set; }
-        public double Y { get; set; }
+        public float X { get; set; }
+        public float Y { get; set; }
         public Velocity Velocity { get; set; } = new Velocity();
         public PixelWorld World { get; private set; }
 
         public int Hits { get; set; } = 0;
-
         public int MaxHits { get; set; } = 1;
         public bool IsDead
         {
@@ -32,15 +31,20 @@ namespace PixelChaser
                 return false;
             }
         }
-        public double PowerFactor { get; set; } = 1;
-
+        public float PowerFactor { get; set; } = 1;
+        public float Length { get; set; } = 10;
+        public float Width { get; set; } = 3;
+        public int Damage { get; set; } = 1;
         public double LifetimeDistance { get; set; } = 400;
         public double TotalDistance { get; private set; } = 0;
+
+        public float Angle { get; set; }
 
         public Projectile(PixelWorld world)
         {
             World = world;
             World.MovedDown += Tick;
+            Velocity.AreaDendistyFactor = World.AreaDensityFactor;
         }
 
         private void Tick(object sender, EventArgs e)
@@ -48,7 +52,7 @@ namespace PixelChaser
             UpdatePosition();
         }
 
-        public Projectile(PixelWorld world ,double x, double y)
+        public Projectile(PixelWorld world ,float x, float y)
         { 
             World = world;
             World.MovedDown += Tick;

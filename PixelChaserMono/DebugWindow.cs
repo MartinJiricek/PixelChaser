@@ -30,11 +30,6 @@ namespace PixelChaser
             Data = data;
             _w.MovedDown += WorldTicked;
 
-            WorldTickBox.Value = Data.WorldTickInterval;
-            MaxUnitsBox.Value = _w.MaxUnits;
-            MaxUnitsPerRowBox.Value = _w.MaxUnitsPerRow;
-            MaxLimitBox.Value = (decimal) _w.MaxPixelSpeed;
-            MaxSizeBox.Value = _w.MaxPixelSize;
 
             ShowWorldInfo();
 
@@ -55,26 +50,8 @@ namespace PixelChaser
             _sb.AppendLine($"Chaser velocity:  [{_c.Velocity.X}, {_c.Velocity.Y}]     max: {_c.Velocity.MaxLimit}");
 
 
-            WordInfoBox.Text = _sb.ToString();
         }
 
-        private void WorldTickBox_ValueChanged(object sender, EventArgs e)
-        {
-           Data.SetWorldTickInterval((int)WorldTickBox.Value);
-        }
-
-        private void MaxUnitsBox_ValueChanged(object sender, EventArgs e)
-        {
-           // Data.World.Generator.MaxBatchSize = (int)MaxUnitsBox.Value;
-        }
-
-        private void MaxUnitsPerRowBox_ValueChanged(object sender, EventArgs e)
-        {
-            //Data.World.Generator.MaxUnitsOnBottom = (int)MaxUnitsPerRowBox.Value;
-            //Data.World.Generator.MaxUnitsOnLeft = (int)MaxUnitsPerRowBox.Value;
-            //Data.World.Generator.MaxUnitsOnTop = (int)MaxUnitsPerRowBox.Value;
-            //Data.World.Generator.MaxUnitsOnRight = (int)MaxUnitsPerRowBox.Value;
-        }
 
         private void MaxLimitBox_ValueChanged(object sender, EventArgs e)
         {
@@ -103,6 +80,13 @@ namespace PixelChaser
         {
 
             PropertyWindow win = new PropertyWindow(Data.Chaser);
+            win.Show();
+        }
+
+        private void GamePropertiesBtn_Click(object sender, EventArgs e)
+        {
+
+            PropertyWindow win = new PropertyWindow(Data);
             win.Show();
         }
     }

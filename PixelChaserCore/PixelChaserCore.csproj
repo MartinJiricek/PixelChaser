@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="Chaser.cs" />
     <Compile Include="ExtractorTool.cs" />
+    <Compile Include="Gun.cs" />
     <Compile Include="IPoolable.cs" />
     <Compile Include="ObjectPool.cs" />
     <Compile Include="PixelContainer.cs" />

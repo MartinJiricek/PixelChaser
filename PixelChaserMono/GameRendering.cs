@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Shapes;
 using System;
+using System.Threading;
 
 namespace PixelChaser
 {
@@ -13,8 +14,28 @@ namespace PixelChaser
 
         private System.Windows.Forms.Timer _worldTimer;
         private System.Windows.Forms.Timer _fpsCounter;
+        private System.Windows.Forms.Timer _keyDelayTimer;
         private int _fps = 0;
+        private SpriteFont _infoFont;
+        private Texture2D _cursor;
+        private Texture2D _laserGreen;
+        private Texture2D _chaser;
+
         public int FPS { get; private set; }
+
+        public int KeyDelay
+        {
+            get { return _keyDelayTimer.Interval; }
+            set
+            {
+                if (value < 1)
+                    _keyDelayTimer.Interval = 1;
+                else if (value > 5000)
+                    _keyDelayTimer.Interval = 5000;
+                else
+                    _keyDelayTimer.Interval = value;
+            }
+        }
         public KeyboardState KeysNow
         {
             get
@@ -30,18 +51,18 @@ namespace PixelChaser
                 return Mouse.GetState();
             }
         }
-        private SpriteFont _infoFont;
-        private Texture2D _cursor;
 
         public Game1()
         {
             IsFixedTimeStep = false;
 
             _graphics = new GraphicsDeviceManager(this);
+            Window.IsBorderless = true;
+            Window.Position = new Point(0, 0);
             _graphics.SynchronizeWithVerticalRetrace = false;
-            _graphics.PreferredBackBufferWidth = 1000;
-            _graphics.PreferredBackBufferHeight = 580;
-            //_graphics.ToggleFullScreen();
+            _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+            _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+           // _graphics.ToggleFullScreen();
 
             _graphics.PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8;
 
@@ -52,8 +73,20 @@ namespace PixelChaser
             _fpsCounter.Tick += FPS_Tick;
             _fpsCounter.Start();
 
+
+            _keyDelayTimer = new System.Windows.Forms.Timer();
+            _keyDelayTimer.Interval = 30;
+            _keyDelayTimer.Tick += KeyDelay_Tick;
+
+
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+
+        }
+
+        private void KeyDelay_Tick(object sender, EventArgs e)
+        {
+            _keyDelayTimer.Enabled = false;
         }
 
         private void FPS_Tick(object sender, EventArgs e)
@@ -78,6 +111,8 @@ namespace PixelChaser
 
             LoadWorld(new PixelWorld(Window.ClientBounds.Width, Window.ClientBounds.Height));
             _cursor = Content.Load<Texture2D>("CursorBasic");
+            _laserGreen = Content.Load<Texture2D>("LaserGreen");
+            _chaser = Content.Load<Texture2D>("Chaser2");
 
             Mouse.SetCursor(MouseCursor.FromTexture2D(_cursor, _cursor.Width/2, _cursor.Height/2));
             IsMouseVisible = false;
@@ -95,42 +130,7 @@ namespace PixelChaser
             base.Update(gameTime);
         }
 
-        private void InputProcessing()
-        {
 
-            if (KeysNow.IsKeyDown(Keys.Escape))
-                Exit();
-
-            if (KeysNow.IsKeyDown(Keys.W))            
-                Chaser.MoveUp();            
-
-            if (KeysNow.IsKeyDown(Keys.A) )
-                Chaser.MoveLeft();
-
-            if (KeysNow.IsKeyDown(Keys.S))
-                Chaser.MoveDown();
-
-            if (KeysNow.IsKeyDown(Keys.D) )
-                Chaser.MoveRight();
-
-            if (KeysNow.IsKeyDown(Keys.Space))
-            {
-                World.MoveDown();
-            }
-
-            if (MouseNow.LeftButton == ButtonState.Pressed)
-            {
-                OnMouseClick();
-            }
-
-            if (KeysNow.IsKeyDown(Keys.F2))
-            {
-                DebugWindow win = new DebugWindow(this);
-                win.Show();
-            }
-
-            _keysBefore = Keyboard.GetState();
-        }
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
@@ -140,8 +140,9 @@ namespace PixelChaser
             _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied);
 
             DrawAllPixelUnits();
-            DrawChaser();
+            Chaser.Draw(_spriteBatch,_chaser);
             DrawProjectiles();
+
 
             _spriteBatch.DrawString(_infoFont, $"{World.PixelUnits.Count} pixels, {FPS} fps,   hits: {Chaser.Container.TotalPixels}", new Vector2(20, 20), Color.White);           
             _spriteBatch.End();
@@ -149,15 +150,6 @@ namespace PixelChaser
             base.Draw(gameTime);
         }
 
-        private void DrawChaser()
-        {
-            if (Math.Abs(MouseNow.X - Chaser.X) == 0)
-                return;
-
-            _spriteBatch.DrawCircle(new Vector2((float)Chaser.X, (float)Chaser.Y), 20 , 16, new Color(255, 255, 255, 50), 2);
-            _spriteBatch.DrawLine(new Vector2((float)Chaser.AimX, (float)Chaser.AimY), new Vector2((float)Chaser.X, (float)Chaser.Y), Color.White*0.4f, 1);
-            _spriteBatch.DrawCircle(new Vector2((float)Chaser.AimX, (float)Chaser.AimY),3,100,Color.White, 2);
-        }
 
         private void DrawPixelUnit(PixelUnit pu)
         {
@@ -167,12 +159,19 @@ namespace PixelChaser
 
         private void DrawProjectiles()
         {
+            RandomGenerator rdm = new RandomGenerator(); 
+            var origin = new Vector2(_laserGreen.Width / 2f, _laserGreen.Height / 2f);
+            Color col = new Color(255,255,255,255);
 
-            for(int i = 0; i < World.Projectiles.Count; i++)
+            for (int i = 0; i < World.Projectiles.Count; i++)
             {
                 Projectile p = World.Projectiles[i];
-                _spriteBatch.DrawLine(new Vector2((float)p.X, (float)p.Y), new Vector2((float)(p.X+p.Velocity.X), (float)(p.Y + p.Velocity.Y)), Color.White, 2);
-                _spriteBatch.DrawCircle(new Vector2((float)p.X, (float)p.Y), 2, 10, Color.White);
+                //_spriteBatch.DrawLine(new Vector2((float)p.X, (float)p.Y), new Vector2((float)(p.X+p.Velocity.X), (float)(p.Y + p.Velocity.Y)), col, 1);
+                //_spriteBatch.DrawCircle(new Vector2((float)p.X, (float)p.Y), 1, 10, col,2);
+
+                _spriteBatch.Draw(_laserGreen, new Rectangle((int)p.X, (int)p.Y, (int)Chaser.Gun.ProjectileWidth, (int)Chaser.Gun.ProjectileLength), null, col,-p.Angle, origin, SpriteEffects.None, 0f);
+
+
             }
         }
 
@@ -194,7 +193,7 @@ namespace PixelChaser
 
         private void OnMouseClick()
         {
-            Chaser.Shoot();
+            Chaser.Gun.Shoot();
         }
        
     }

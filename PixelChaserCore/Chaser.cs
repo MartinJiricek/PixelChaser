@@ -13,8 +13,8 @@ namespace PixelChaser
     {
         public int Hits { get; set; } = 0;
         public PixelWorld CurrentWorld { get; private set; }
-        public double X { get;private set; }
-        public double Y { get; private set; }
+        public float X { get;private set; }
+        public float Y { get; private set; }
         public double RangeDistance { get; set; } = 3;
         public double RangeWidth { get; set; } = 5;
         public double AimAngle
@@ -29,10 +29,12 @@ namespace PixelChaser
             }
         }
         public double MinRange { get; set; } = 10;
-        public double AimX { get; set; }
-        public double AimY { get; set; }
+        public float AimX { get; set; }
+        public float AimY { get; set; }
+        public float Width { get; set; } = 32;
+        public float Height { get; set; } = 32;
 
-        public double GunPower { get; set; } = 1;
+        public double GunPower { get; set; } = 10;
         public Point RangeEndpoint
         {
             get
@@ -61,13 +63,14 @@ namespace PixelChaser
             }
         }
 
-        private double _velocityStepSize { get; set; } = 70;
         private Timer _moveTimer = new Timer();
+
+        public Gun Gun { get; set; }
 
         public PixelContainer Container { get; set; } = new PixelContainer();
 
         public Velocity Velocity { get; set; } = new Velocity();
-
+        public float AirFactor { get; set; } = 3;
 
         public int GunCooldown { get; set; } = 5;
         private int _gunCooldownCounter = 0; 
@@ -77,15 +80,20 @@ namespace PixelChaser
 
         public Chaser()
         {
-            Velocity.MaxLimit = 20;
+            Velocity.MaxLimit = 10;
             _moveTimer.Tick += Move_Tick;
-            _moveTimer.Interval = 10;
+            _moveTimer.Interval = 20;
+
+            Gun = new Gun(this);
+          
         }
 
         private void Move_Tick(object sender, EventArgs e)
         {
             UpdatePosition();
         }
+
+
 
         public void ExtractPixels( )
         {
@@ -103,6 +111,9 @@ namespace PixelChaser
 
             if (!_moveTimer.Enabled)
                 _moveTimer.Start();
+
+            X = world.Width / 2;
+            Y = world.Height / 2;
         }
 
         private void CurrentWorld_MovedDown(object sender, EventArgs e)
@@ -117,8 +128,8 @@ namespace PixelChaser
         private void UpdatePosition()
         {
 
-            X = X + (int)(Velocity.X / _velocityStepSize);
-            Y = Y + (int)(Velocity.Y / _velocityStepSize);
+            X = X + (int)(Velocity.X);
+            Y = Y + (int)(Velocity.Y);
 
             if (X < 0)
             {
@@ -146,34 +157,47 @@ namespace PixelChaser
 
         private void UpdateVelocity()
         {
+            Velocity.AreaDendistyFactor = CurrentWorld.AreaDensityFactor;
 
-            if (Velocity.X < 0)
-                Velocity.X = Velocity.X + CurrentWorld.AreaDensityFactor;
-            else if (Velocity.X > 0)
-                Velocity.X = Velocity.X - CurrentWorld.AreaDensityFactor;
+            //if (Velocity.X < 0)
+            //    Velocity.X = Velocity.X;
+            //else if (Velocity.X > 0)
+            //    Velocity.X = Velocity.X;
 
 
-            if (Velocity.Y < 0)
-                Velocity.Y = Velocity.Y + CurrentWorld.AreaDensityFactor;
-            else if (Velocity.Y > 0)
-                Velocity.Y = Velocity.Y - CurrentWorld.AreaDensityFactor;
-
+            //if (Velocity.Y < 0)
+            //    Velocity.Y = Velocity.Y;
+            //else if (Velocity.Y > 0)
+            //    Velocity.Y = Velocity.Y;
         }
 
-        public void MoveUp(int power = 1)
+        public void MoveUp(float power = 1)
         {
+            if (Velocity.Y > 0)
+                power = power + AirFactor;
+
             Velocity.Y = Velocity.Y - power;
         }
-        public void MoveDown(int power = 1)
+        public void MoveDown(float power = 1)
         {
+            if (Velocity.Y < 0)
+                power = power + AirFactor;
+
             Velocity.Y = Velocity.Y + power;
         }
-        public void MoveLeft(int power = 1)
+        public void MoveLeft(float power = 1)
         {
+            if (Velocity.X > 0)
+                power = power + AirFactor;
+
             Velocity.X = Velocity.X - power;
         }
-        public void MoveRight(int power = 1)
+        public void MoveRight(float power = 1)
         {
+            if (Velocity.X < 0)
+                power = power + AirFactor;
+
+
             Velocity.X = Velocity.X + power;
         }
         public void SetPosition(int x, int y)
@@ -217,28 +241,6 @@ namespace PixelChaser
 
             return isInRange;
         }
-        public void Shoot()
-        {
-            Shoot(GunPower);
-        }
-        public void Shoot(double power)
-        {
-            if (_gunCooldownCounter > 0) return;
-
-            Projectile bullet = new Projectile(CurrentWorld);
-
-            bullet.X = X;
-            bullet.Y = Y;
-
-            double dist = Math.Sqrt(Math.Pow(X - AimX, 2) + Math.Pow(AimY - Y, 2));
-            double powFactor = power / dist;
-
-            bullet.Velocity.X = (AimX - X) * powFactor;
-            bullet.Velocity.Y = (AimY - Y) * powFactor;
-
-            CurrentWorld.Projectiles.Add(bullet);
-            _gunCooldownCounter = GunCooldown;
-        }
 
         private void CheckHits()
         {
@@ -256,7 +258,6 @@ namespace PixelChaser
                 }
 
                 Container.AddPixels(hits);
-
             }
 
         }

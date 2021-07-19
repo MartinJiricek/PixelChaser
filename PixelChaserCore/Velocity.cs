@@ -8,43 +8,42 @@ namespace PixelChaser
 {
     public class Velocity
     {
-        public double X
+        public float X
         {
             get
             {
                 
-                return _x;
+                return _x * AreaDendistyFactor;
             }
             set
             {
                 if (value > MaxLimit && !IgnoreLimit)
-                    _x = MaxLimit;
+                    _x = (float)MaxLimit;
                 else if (value < (MaxLimit * -1) && !IgnoreLimit)
-                    _x = (MaxLimit * -1);
+                    _x = (float)(MaxLimit * -1);
                 _x = value;
             }
         }
-        private double _x = 0;
-
-        public double Y
+        private float _x = 0;
+        public float Y
         {
             get
             {               
-                return _y;
+                return _y * AreaDendistyFactor;
             }
             set
             {
                 if (value > MaxLimit && !IgnoreLimit)
-                    _y = MaxLimit;
+                    _y = (float)MaxLimit;
                 else if (value < (MaxLimit * -1) && !IgnoreLimit)
-                    _y = (MaxLimit * -1);
+                    _y = (float)(MaxLimit * -1);
                 _y = value;
             }
         }
-        private double _y = 0;
+        private float _y = 0;
         public double MaxLimit { get; set; } = 0;
         public bool IgnoreLimit { get { return MaxLimit == 0; } }
-
+        public float AreaDendistyFactor { get; set; } = 1;
         public Velocity()
         {
 
