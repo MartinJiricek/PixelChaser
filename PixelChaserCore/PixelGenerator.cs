@@ -39,14 +39,13 @@ namespace PixelChaser
             }
         }
         public int MaxSpeed { get; set; } = 32;
-
         public int MaxUnitsOnTop { get; set; } = 5;
         public int MaxUnitsOnRight { get; set; } = 5;
         public int MaxUnitsOnBottom { get; set; } = 5;
         public int MaxUnitsOnLeft { get; set; } = 5;
 
 
-        private int _maxBatchSize = 10;
+        private int _maxBatchSize = 5;
         private int _minBatchSize = 0;
         public int MaxBatchSize
         {
@@ -81,6 +80,8 @@ namespace PixelChaser
         public VelocityDirection Direction { get; set; } = VelocityDirection.RightToLeft;
         public int MaxVelocityExtension { get; set; } = 5;
 
+        public bool EnableProjectileCollisions { get; set; } = true;
+
         public bool Enabled { get; set; } = true;
 
         public int MinA { get; set; } = 0;
@@ -99,21 +100,36 @@ namespace PixelChaser
         {
             World = world;
             World.MovedDown += WorldTick;
+            SetDefaultConfiguration();
         }
 
         private void WorldTick(object sender, EventArgs e)
         {
             GeneratePixelUnits();
+            CheckProjectileCollisions();
+        }
+
+        public void CheckProjectileCollisions()
+        {
+            if(EnableProjectileCollisions)
+                for (int i = 0; i < World.Projectiles.Count; i++)
+                {
+                    Projectile prj = World.Projectiles[i];
+                    int hits = World.PixelUnits.RemoveAll(pu => xMath.LineIntersectsRect(prj.PTStart,prj.PTEnd,pu.GetRectangle()));
+                    if (hits > 0)
+                    {
+                        prj.AddHit(hits);
+                    }
+                }
         }
 
         public void SetDefaultConfiguration()
         {
 
-            MaxSize = 4;
-            MaxSpeed = 16;
-            MaxBatchSize = 16;
             MaxSize = 8;
-            MinSize = 1;
+            MaxSpeed = 16;
+            MaxBatchSize = 4;
+            MinSize = 2;
 
             MinA = 0;
             MaxA = 255;
@@ -128,7 +144,7 @@ namespace PixelChaser
             MaxB = 0;
 
             RightSpawn = true;
-            TopSpawn = true;
+            TopSpawn = false;
             BottomSpawn = true;
             LeftSpawn = false;
 
@@ -158,7 +174,6 @@ namespace PixelChaser
 
             pu.Velocity = GetRandomVelocity();
             pu.Position = GetRandomPoint();
-            pu.MainColor = GetRandomColor();
             pu.TypeID = GetRandomPixelType();
             pu.Size = GetRandomSize();
 

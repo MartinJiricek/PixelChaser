@@ -23,11 +23,21 @@ namespace PixelChaser
             StopPixelGenerator();
             World.ClearPixels();
 
-            Chaser.GunPower = 15;
             KeyDelay = 35;
             Chaser.MoveInterval = 35;
-            World.AreaDensityFactor = 1.5f;
+            World.AreaDensityFactor =1.1f;
+            World.Generator.TopSpawn = false;
+            World.Generator.BottomSpawn = false;
+            World.Generator.LeftSpawn = false;
+            World.Generator.RightSpawn = true;
+            World.Generator.MaxUnitsOnTop = 0;
+            World.Generator.MaxUnitsOnRight = 2;
+            World.Generator.MaxUnitsOnBottom = 0;
+            World.Generator.MaxUnitsOnLeft = 0;
+            World.Generator.MaxBatchSize = 2;
             IsFixedTimeStep = true;
+
+            StartPixelGenerator();
 
         }
 

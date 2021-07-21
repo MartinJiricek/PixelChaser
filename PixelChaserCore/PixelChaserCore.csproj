@@ -44,17 +44,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="xMath.cs" />
     <Compile Include="Chaser.cs" />
+    <Compile Include="Enemy.cs" />
+    <Compile Include="Entity.cs" />
     <Compile Include="ExtractorTool.cs" />
+    <Compile Include="GenericGun.cs" />
     <Compile Include="Gun.cs" />
+    <Compile Include="IGun.cs" />
     <Compile Include="IPoolable.cs" />
+    <Compile Include="NoGun.cs" />
     <Compile Include="ObjectPool.cs" />
-    <Compile Include="PixelContainer.cs" />
     <Compile Include="PixelGenerator.cs" />
     <Compile Include="PixelUnit.cs" />
     <Compile Include="PixelWorld.cs" />
     <Compile Include="Projectile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SelfUpgraderGun.cs" />
     <Compile Include="StrongRandom.cs" />
     <Compile Include="Velocity.cs" />
   </ItemGroup>

@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Shapes;
 using System;
+using System.Text;
 using System.Threading;
 
 namespace PixelChaser
@@ -20,7 +21,7 @@ namespace PixelChaser
         private Texture2D _cursor;
         private Texture2D _laserGreen;
         private Texture2D _chaser;
-
+        private RandomGenerator _rdm = new RandomGenerator();
         public int FPS { get; private set; }
 
         public int KeyDelay
@@ -51,6 +52,7 @@ namespace PixelChaser
                 return Mouse.GetState();
             }
         }
+        public bool ShowDebugInfo { get; set; } = true;
 
         public Game1()
         {
@@ -134,44 +136,41 @@ namespace PixelChaser
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
-
-            // TODO: Add your drawing code here
-
             _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied);
 
-            DrawAllPixelUnits();
             Chaser.Draw(_spriteBatch,_chaser);
             DrawProjectiles();
-
-
-            _spriteBatch.DrawString(_infoFont, $"{World.PixelUnits.Count} pixels, {FPS} fps,   hits: {Chaser.Container.TotalPixels}", new Vector2(20, 20), Color.White);           
+            DrawAllPixelUnits();
+            if (ShowDebugInfo)
+             DrawGameInfo();
+       
             _spriteBatch.End();
             _fps++;
             base.Draw(gameTime);
         }
 
+        private void DrawEntities()
+        {
+            for(int i = 0; i < World.Entities.Count; i++)
+            {
+                Entity e = World.Entities[i];
+            }
+        }
+
 
         private void DrawPixelUnit(PixelUnit pu)
         {
-            _spriteBatch.Draw(_units[pu.TypeID], new Rectangle((int)pu.X, (int)pu.Y, pu.Width, pu.Height), new Color(255, 255, 255, 255-pu.A));
-            // _spriteBatch.FillRectangle(new Rectangle(pu.X, pu.Y, pu.Width, pu.Height), new Color(pu.R, pu.G, pu.B,pu.A));
+            _spriteBatch.Draw(_units[pu.TypeID], new Rectangle((int)(pu.X-pu.Width/2), (int)(pu.Y - pu.Height / 2),(int) pu.Width, (int)pu.Height), new Color(255, 255, 255, _rdm.Next(0,255)));
         }
 
         private void DrawProjectiles()
         {
-            RandomGenerator rdm = new RandomGenerator(); 
             var origin = new Vector2(_laserGreen.Width / 2f, _laserGreen.Height / 2f);
-            Color col = new Color(255,255,255,255);
 
             for (int i = 0; i < World.Projectiles.Count; i++)
             {
                 Projectile p = World.Projectiles[i];
-                //_spriteBatch.DrawLine(new Vector2((float)p.X, (float)p.Y), new Vector2((float)(p.X+p.Velocity.X), (float)(p.Y + p.Velocity.Y)), col, 1);
-                //_spriteBatch.DrawCircle(new Vector2((float)p.X, (float)p.Y), 1, 10, col,2);
-
-                _spriteBatch.Draw(_laserGreen, new Rectangle((int)p.X, (int)p.Y, (int)Chaser.Gun.ProjectileWidth, (int)Chaser.Gun.ProjectileLength), null, col,-p.Angle, origin, SpriteEffects.None, 0f);
-
-
+                _spriteBatch.Draw(_laserGreen, new Rectangle((int)p.X, (int)p.Y, (int)Chaser.Gun.ProjectileWidth, (int)Chaser.Gun.ProjectileLength), null, Color.White,-p.Angle, origin, SpriteEffects.None, 0f);
             }
         }
 
@@ -186,15 +185,37 @@ namespace PixelChaser
         {
             base.UnloadContent();
             _spriteBatch.Dispose();
-
-            // If you are creating your texture (instead of loading it with
-            // Content.Load) then you must Dispose of it
         }
 
         private void OnMouseClick()
         {
-            Chaser.Gun.Shoot();
+            Chaser.Gun.Shoot();            
         }
-       
+
+        private void DrawGameInfo()
+        {
+            // arial 10, 15px per line
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendLine($"Pixels: {World.PixelUnits.Count}    Projectiles: {World.Projectiles.Count}");
+            sb.AppendLine($"FPS: {FPS}");
+            sb.AppendLine($"HP: {Chaser.HP}    Hits: {Chaser.Hits}");
+            sb.AppendLine($"Lifetime: {Chaser.LifeTime} ticks");
+            sb.AppendLine($"CD: {Chaser.Gun.Cooldown}");
+            sb.AppendLine($"Damage: {Chaser.Gun.Damage}");
+            sb.AppendLine($"Projectile Length: {Chaser.Gun.ProjectileLength}");
+            sb.AppendLine($"Projectile Speed: {Chaser.Gun.ProjectileSpeed}");
+            sb.AppendLine($"Current gun: {Chaser.Gun.Name}");
+            sb.AppendLine($"Position: [{Chaser.X}, {Chaser.Y}]   Velocity: [{Chaser.Velocity.X}, {Chaser.Velocity.Y}]");
+            sb.AppendLine($"Aim: [{Chaser.AimX}, {Chaser.AimY}]  Angle: [{Chaser.AimAngle}]");
+
+
+
+            _spriteBatch.DrawString(_infoFont, sb.ToString(), new Vector2(5, 10), Color.White);
+
+
+
+        }
     }
 }

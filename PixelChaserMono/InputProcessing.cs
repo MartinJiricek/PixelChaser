@@ -46,7 +46,6 @@ namespace PixelChaser
             {
                 _keyDelayTimer.Start();
                 _moved = false;
-
             }
 
             if (KeysNow.IsKeyDown(Keys.Space))
@@ -75,7 +74,6 @@ namespace PixelChaser
                 DebugWindow win = new DebugWindow(this);
                 win.Show();
             }
-
 
             if (KeysNow.IsKeyDown(Keys.F2))
                 SetEmptyArea();

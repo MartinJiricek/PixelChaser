@@ -13,6 +13,8 @@ namespace PixelChaser
         public string Name { get; set; } = "default";
         public List<PixelUnit> PixelUnits { get; private set; } = new List<PixelUnit>();
         public List<Projectile> Projectiles { get; private set; } = new List<Projectile>();
+        public List<Enemy> Enemies { get; private set; } = new List<Enemy>();
+        public List<Entity> Entities { get; private set; } = new List<Entity>();
 
         public event EventHandler MovedDown;
 
@@ -34,7 +36,7 @@ namespace PixelChaser
         public double MaxPixelSpeed { get; set; } = 10;
         public int MaxUnitsPerRow { get; set; } = 20;
 
-        private float _areaDensityFactor = 1;
+        private float _areaDensityFactor = 1.2f;
         private float _densityHysteresis = 0;
         public float AreaDensityFactor
         {
