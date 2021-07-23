@@ -5,6 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Windows.Forms;
+using Microsoft.Win32.SafeHandles;
+using System;
+using System.Runtime.InteropServices;
 
 namespace PixelChaser
 {
@@ -19,12 +22,13 @@ namespace PixelChaser
         float ProjectileWidth { get; }
         float Range { get; }
         int Ammo { get;  }
-        float X { get;  }
-        float Y { get;  }
+        float InitialX { get;  }
+        float InitialY { get;  }
         float AimX { get;  }
         float AimY { get;  }
         bool ReadyToShoot { get; }
 
         void Shoot();
+       
     }
 }

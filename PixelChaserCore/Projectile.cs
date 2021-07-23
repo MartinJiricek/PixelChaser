@@ -39,9 +39,10 @@ namespace PixelChaser
         public double LifetimeDistance { get; set; } = 400;
         public double TotalDistance { get; private set; } = 0;
 
+        public List<string> EndTargets { get; private set; } = new List<string>();
+
         public float Angle { get; set; }
 
-        public event EventHandler SuccessHit;
 
         public PointF PTStart
         {
@@ -68,7 +69,7 @@ namespace PixelChaser
         {
             World = world;
             World.MovedDown += Tick;
-            Velocity.AreaDendistyFactor = World.AreaDensityFactor;
+           // Velocity.AreaDendistyFactor = World.AreaDensityFactor;
 
         }
 
@@ -95,14 +96,12 @@ namespace PixelChaser
             TotalDistance = TotalDistance + distance;
         }
 
-        public void AddHit(int hitCount = 1)
+        public float GetDistanceFrom(PointF pt)
         {
-            if (hitCount > 0)
-            {
-                Hits = Hits + hitCount;
-                if (SuccessHit != null) SuccessHit(this, new EventArgs());
-            }
+            return (float) Math.Sqrt(Math.Pow(pt.X - X, 2) + Math.Pow(pt.Y - Y, 2));
         }
+
+
 
 
     }

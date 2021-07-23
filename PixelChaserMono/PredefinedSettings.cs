@@ -31,11 +31,16 @@ namespace PixelChaser
             World.Generator.LeftSpawn = false;
             World.Generator.RightSpawn = true;
             World.Generator.MaxUnitsOnTop = 0;
-            World.Generator.MaxUnitsOnRight = 2;
+            World.Generator.MaxUnitsOnRight = 0;
             World.Generator.MaxUnitsOnBottom = 0;
             World.Generator.MaxUnitsOnLeft = 0;
-            World.Generator.MaxBatchSize = 2;
-            IsFixedTimeStep = true;
+            World.Generator.MaxBatchSize = 0;
+            IsFixedTimeStep = false;
+            IsMouseVisible = true;
+            DrawAllAimingLines = false;
+
+            Enemy enemy = new Enemy();
+            enemy.EnterWorld(World);
 
             StartPixelGenerator();
 

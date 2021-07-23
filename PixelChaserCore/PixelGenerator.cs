@@ -118,7 +118,7 @@ namespace PixelChaser
                     int hits = World.PixelUnits.RemoveAll(pu => xMath.LineIntersectsRect(prj.PTStart,prj.PTEnd,pu.GetRectangle()));
                     if (hits > 0)
                     {
-                        prj.AddHit(hits);
+                        //prj.AddHit(hits);
                     }
                 }
         }

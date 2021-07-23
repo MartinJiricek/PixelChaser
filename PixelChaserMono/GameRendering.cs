@@ -21,6 +21,7 @@ namespace PixelChaser
         private Texture2D _cursor;
         private Texture2D _laserGreen;
         private Texture2D _chaser;
+        private Texture2D _enemy;
         private RandomGenerator _rdm = new RandomGenerator();
         public int FPS { get; private set; }
 
@@ -48,11 +49,18 @@ namespace PixelChaser
         public MouseState MouseNow
         {
             get
-            { 
+            {
                 return Mouse.GetState();
             }
         }
         public bool ShowDebugInfo { get; set; } = true;
+        public bool HighlightCornerPoints { get; set; } = false;
+
+        public bool UseFullResolution { get; set; } = false;
+        public int PreSetWidth { get { return 800; } } 
+        public int PreSetHeight { get { return 640; } }
+
+        public bool ExitOnChaserDied { get; set; } = true;
 
         public Game1()
         {
@@ -62,9 +70,11 @@ namespace PixelChaser
             Window.IsBorderless = true;
             Window.Position = new Point(0, 0);
             _graphics.SynchronizeWithVerticalRetrace = false;
-            _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-            _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
-           // _graphics.ToggleFullScreen();
+
+            if (UseFullResolution)
+                UseFullScreenResolution();
+            else
+                UsePreSetResolution();
 
             _graphics.PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8;
 
@@ -86,6 +96,18 @@ namespace PixelChaser
 
         }
 
+        public void UseFullScreenResolution()
+        {
+            _graphics.PreferredBackBufferWidth = PreSetWidth;
+            _graphics.PreferredBackBufferHeight = PreSetHeight;
+        }
+
+        public void UsePreSetResolution()
+        {
+            _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+            _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+        }
+
         private void KeyDelay_Tick(object sender, EventArgs e)
         {
             _keyDelayTimer.Enabled = false;
@@ -94,7 +116,7 @@ namespace PixelChaser
         private void FPS_Tick(object sender, EventArgs e)
         {
             FPS = _fps;
-            _fps = 0;            
+            _fps = 0;
         }
 
         protected override void Initialize()
@@ -115,8 +137,9 @@ namespace PixelChaser
             _cursor = Content.Load<Texture2D>("CursorBasic");
             _laserGreen = Content.Load<Texture2D>("LaserGreen");
             _chaser = Content.Load<Texture2D>("Chaser2");
+            _enemy = Content.Load<Texture2D>("Enemy1");
 
-            Mouse.SetCursor(MouseCursor.FromTexture2D(_cursor, _cursor.Width/2, _cursor.Height/2));
+            Mouse.SetCursor(MouseCursor.FromTexture2D(_cursor, _cursor.Width / 2, _cursor.Height / 2));
             IsMouseVisible = false;
         }
 
@@ -138,12 +161,14 @@ namespace PixelChaser
             GraphicsDevice.Clear(Color.Black);
             _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied);
 
-            Chaser.Draw(_spriteBatch,_chaser);
+            //  Chaser.Draw(_spriteBatch,_chaser);
             DrawProjectiles();
             DrawAllPixelUnits();
+            DrawEntities();
+
             if (ShowDebugInfo)
-             DrawGameInfo();
-       
+                DrawGameInfo();
+
             _spriteBatch.End();
             _fps++;
             base.Draw(gameTime);
@@ -151,16 +176,75 @@ namespace PixelChaser
 
         private void DrawEntities()
         {
-            for(int i = 0; i < World.Entities.Count; i++)
+            for (int i = 0; i < World.Entities.Count; i++)
             {
-                Entity e = World.Entities[i];
+                Entity ent = World.Entities[i];
+                if (!ent.IsDead)
+                    switch (ent.TextureID)
+                    {
+                        case "":
+                            ent.Draw(_spriteBatch, _enemy);
+                            if (DrawAllAimingLines)
+                                _spriteBatch.DrawLine(new Vector2(ent.X, ent.Y), new Vector2(ent.AimX, ent.AimY), Color.Gray, 0.5f);
+                            break;
+
+                        case "chaser":
+                            ent.Draw(_spriteBatch, _chaser);
+                            if (DrawChaserAimingLine || DrawAllAimingLines)
+                            {
+                                _spriteBatch.DrawLine(new Vector2(ent.X, ent.Y), new Vector2(ent.AimX, ent.AimY), Color.Gray, 0.5f);
+                                for(int ix = 0; ix < ent.CollisionData.Count;ix++)
+                                {
+                                    Vector2 end = new Vector2(ent.CollisionData[0].X, ent.CollisionData[0].Y);
+                                    if(ix < ent.CollisionData.Count-1)
+                                        end = new Vector2(ent.CollisionData[ix+1].X, ent.CollisionData[ix+1].Y);
+                                    _spriteBatch.DrawLine(new Vector2(ent.CollisionData[ix].X, ent.CollisionData[ix].Y), end, Color.White);
+
+                                }
+                            }
+
+                            break;
+                    }
+
+                if (HighlightCornerPoints)
+                {
+
+                    _spriteBatch.DrawCircle(new Vector2(ent.X, ent.Y), 2, 5, Color.Blue, 5);
+                    _spriteBatch.DrawCircle(new Vector2(ent.X - ent.Width / 2, ent.Y - ent.Height / 2), 2, 4, Color.Blue, 5);
+                    _spriteBatch.DrawCircle(new Vector2(ent.X + ent.Width / 2, ent.Y - ent.Height / 2), 2, 4, Color.Blue, 5);
+                    _spriteBatch.DrawCircle(new Vector2(ent.X - ent.Width / 2, ent.Y + ent.Height / 2), 2, 4, Color.Blue, 5);
+                    _spriteBatch.DrawCircle(new Vector2(ent.X + ent.Width / 2, ent.Y + ent.Height / 2), 2, 4, Color.Blue, 5);
+
+                    for (int ix = 0; ix < ent.CollisionData.Count; ix++)
+                        _spriteBatch.DrawCircle(new Vector2(ent.CollisionData[ix].X, ent.CollisionData[ix].Y), 2, 5, Color.White, 5);
+
+
+                    for (int ix = 0; ix < World.Projectiles.Count; ix++)
+                    {
+                        Projectile p = World.Projectiles[ix];
+                        _spriteBatch.DrawCircle(new Vector2(p.X, p.Y), 2, 5, Color.White, 5);
+                        _spriteBatch.DrawCircle(new Vector2(p.X + p.Velocity.X, p.Y + p.Velocity.Y), 2, 5, Color.White, 5);
+
+                    }
+
+                    try
+                    {
+                        _spriteBatch.DrawCircle(new Vector2(ent.Gun.X, ent.Gun.Y), 2, 4, Color.LimeGreen, 5);
+                    }
+                    catch { }
+
+                }
+
             }
         }
+
+        public bool DrawAllAimingLines { get; set; } = true;
+        public bool DrawChaserAimingLine { get; set; } = true;
 
 
         private void DrawPixelUnit(PixelUnit pu)
         {
-            _spriteBatch.Draw(_units[pu.TypeID], new Rectangle((int)(pu.X-pu.Width/2), (int)(pu.Y - pu.Height / 2),(int) pu.Width, (int)pu.Height), new Color(255, 255, 255, _rdm.Next(0,255)));
+            _spriteBatch.Draw(_units[pu.TypeID], new Rectangle((int)(pu.X - pu.Width / 2), (int)(pu.Y - pu.Height / 2), (int)pu.Width, (int)pu.Height), new Color(255, 255, 255, _rdm.Next(0, 255)));
         }
 
         private void DrawProjectiles()
@@ -170,7 +254,8 @@ namespace PixelChaser
             for (int i = 0; i < World.Projectiles.Count; i++)
             {
                 Projectile p = World.Projectiles[i];
-                _spriteBatch.Draw(_laserGreen, new Rectangle((int)p.X, (int)p.Y, (int)Chaser.Gun.ProjectileWidth, (int)Chaser.Gun.ProjectileLength), null, Color.White,-p.Angle, origin, SpriteEffects.None, 0f);
+                //_spriteBatch.Draw(_laserGreen, new Rectangle((int)p.X, (int)p.Y, (int)p.Velocity.Y, (int)p.Velocity.X), null, Color.White, -p.Angle, origin, SpriteEffects.None, 0f);
+                _spriteBatch.DrawLine(new Vector2(p.X, p.Y), new Vector2(p.Velocity.X + p.X, p.Velocity.Y+ p.Y), Color.LimeGreen, 2);
             }
         }
 
@@ -189,7 +274,7 @@ namespace PixelChaser
 
         private void OnMouseClick()
         {
-            Chaser.Gun.Shoot();            
+            Chaser.Gun.Shoot();
         }
 
         private void DrawGameInfo()
@@ -198,7 +283,9 @@ namespace PixelChaser
 
             StringBuilder sb = new StringBuilder();
 
+
             sb.AppendLine($"Pixels: {World.PixelUnits.Count}    Projectiles: {World.Projectiles.Count}");
+            sb.AppendLine($"Entities: {World.Entities.Count}    Projectiles: {World.Projectiles.Count}");
             sb.AppendLine($"FPS: {FPS}");
             sb.AppendLine($"HP: {Chaser.HP}    Hits: {Chaser.Hits}");
             sb.AppendLine($"Lifetime: {Chaser.LifeTime} ticks");
@@ -208,14 +295,28 @@ namespace PixelChaser
             sb.AppendLine($"Projectile Speed: {Chaser.Gun.ProjectileSpeed}");
             sb.AppendLine($"Current gun: {Chaser.Gun.Name}");
             sb.AppendLine($"Position: [{Chaser.X}, {Chaser.Y}]   Velocity: [{Chaser.Velocity.X}, {Chaser.Velocity.Y}]");
-            sb.AppendLine($"Aim: [{Chaser.AimX}, {Chaser.AimY}]  Angle: [{Chaser.AimAngle}]");
-
-
+            sb.AppendLine($"Aim: [{Chaser.AimX}, {Chaser.AimY}]  Angle: [{Chaser.AimAngle * (180 / Math.PI)}]");
+            sb.AppendLine($"Gun Position: [{Chaser.Gun.InitialX}, {Chaser.Gun.InitialY}]");
 
             _spriteBatch.DrawString(_infoFont, sb.ToString(), new Vector2(5, 10), Color.White);
+            sb.Clear();
 
 
+
+
+            for (int i = 0; i < World.Entities.Count; i++)
+            {
+                Entity ent = World.Entities[i];
+                float x = ent.X - ent.Width / 2;
+                float y = ent.Y + ent.Height / 2;
+
+                _spriteBatch.DrawString(_infoFont, $"HP: {ent.HP}   HITS: {ent.Hits}", new Vector2(x, y), Color.Red);
+
+
+
+            }
 
         }
+
     }
 }

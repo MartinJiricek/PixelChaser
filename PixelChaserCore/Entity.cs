@@ -5,19 +5,85 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Windows.Forms;
+using Microsoft.Win32.SafeHandles;
+using System;
+using System.Runtime.InteropServices;
 
 namespace PixelChaser
 {
-    public abstract class Entity
+    public abstract class Entity:IDisposable
     {
 
         public int HP { get; set; } = 1;
         public PixelWorld CurrentWorld { get; private set; }
+
+        public CollisionData CollisionData { get; private set; }
         public abstract string Name { get; }
         public abstract string TypeID { get; }
-        public string TextureID { get; set; }
-        public float X { get; set; }
-        public float Y { get; set; }
+        public abstract string TextureID { get;}
+
+        public string ID
+        {
+            get
+            {
+                if (_id == "")
+                    _id = Guid.NewGuid().ToString();
+
+                return _id;
+            }
+        }
+
+        private string _id = "";
+
+        public event EventHandler PositionChanged;
+        private float _x = 0;
+        private float _y = 0;
+        public float X
+        {
+            get { return _x; }
+            set
+            {
+                if(value != _x)
+                {
+                    _x = value;
+                    if (PositionChanged != null)
+                        PositionChanged(this, new EventArgs());
+                }    
+
+            }
+        }
+        public float Y
+        {
+            get { return _y; }
+            set
+            {
+                if (value != _y)
+                {
+                    _y = value;
+                    if (PositionChanged != null)
+                        PositionChanged(this, new EventArgs());
+                }
+
+            }
+        }
+        public PointF Position
+        {
+            get
+            {
+                return new PointF(_x, _y);
+            }
+            set
+            {
+                if(value.X != _x || value.Y != _y)
+                {
+                    _x = value.X;
+                    _y = value.Y;
+
+                    if (PositionChanged != null)
+                        PositionChanged(this, new EventArgs());
+                }
+            }
+        }
         public double AimAngle
         {
             get
@@ -29,25 +95,37 @@ namespace PixelChaser
 
             }
         }
-        public float AimX { get; set; }
-        public float AimY { get; set; }
-        public float Width { get; set; } = 32;
-        public float Height { get; set; } = 32;
-        public Point RangeEndpoint
+        public float AimX
         {
-            get
+            get { return _aimX; }
+            set
             {
-                Point pt = new Point();
-
-                double x = X + (Math.Cos(AimAngle) * Gun.Range);
-                double y = Y + (Math.Sin(AimAngle) * Gun.Range);
-
-                pt.X = (int)x;
-                pt.Y = (int)y;
-
-                return pt;
+                if (value != _aimX)
+                {
+                    _aimX = value;
+                    if (AimChanged != null)
+                        AimChanged(this, new EventArgs());
+                }
             }
         }
+        private float _aimX = 0;
+        public event EventHandler AimChanged;
+        public float AimY
+        {
+            get { return _aimY; }
+            set
+            {
+                if (value != _aimY)
+                {
+                    _aimY = value;
+                    if (AimChanged != null)
+                        AimChanged(this, new EventArgs());
+                }
+            }
+        }
+        private float _aimY = 0;
+        public float Width { get; set; } = 32;
+        public float Height { get; set; } = 32;
         public int MoveInterval
         {
             get { return _moveTimer.Interval; }
@@ -93,66 +171,21 @@ namespace PixelChaser
         public abstract float InitialY { get; }
         public bool EnableProjectileCollisions { get; set; } = true;
         public int Hits { get { return Gun.Hits; } }
-
         public float Speed { get; set; } = 1;
+        public bool VulnerableMyBullets { get; set; } = false;
 
-        public PointF TL
+        public event EventHandler WorldEntered;
+        public virtual bool IsDead
         {
             get
             {
-
-                float x = (X - (Width / 2));
-                float y = (Y - (Height / 2));
-                float rotatedX = (float)(x * Math.Cos(AimAngle) - y * Math.Sin(AimAngle));
-                float rotatedY = (float)(x * Math.Sin(AimAngle) + y * Math.Cos(AimAngle));
-
-                return new PointF(rotatedX + X, rotatedY + y);
+                return (HP <= 0);
             }
         }
-        public PointF TR
-        {
-            get
-            {
-
-                float x = (X + (Width / 2));
-                float y = (Y - (Height / 2));
-                float rotatedX = (float)(x * Math.Cos(AimAngle) - y * Math.Sin(AimAngle));
-                float rotatedY = (float)(x * Math.Sin(AimAngle) + y * Math.Cos(AimAngle));
-
-                return new PointF(rotatedX + X, rotatedY + y);
-            }
-        }
-        public PointF BL
-        {
-            get
-            {
-
-                float x = (X - (Width / 2));
-                float y = (Y + (Height / 2));
-                float rotatedX = (float)(x * Math.Cos(AimAngle) - y * Math.Sin(AimAngle));
-                float rotatedY = (float)(x * Math.Sin(AimAngle) + y * Math.Cos(AimAngle));
-
-                return new PointF(rotatedX + X, rotatedY + y);
-            }
-        }
-        public PointF BR
-        {
-            get
-            {
-
-                float x = (X + (Width / 2));
-                float y = (Y + (Height / 2));
-                float rotatedX = (float)(x * Math.Cos(AimAngle) - y * Math.Sin(AimAngle));
-                float rotatedY = (float)(x * Math.Sin(AimAngle) + y * Math.Cos(AimAngle));
-
-                return new PointF(rotatedX + X, rotatedY + y);
-            }
-        }
-
 
         public virtual void Move_Tick(object sender, EventArgs e)
         {
-            CheckProjectileCollisions();
+           // CheckProjectileCollisions();
             CheckHits();
             UpdatePosition();
             UpdateVelocity();
@@ -161,12 +194,22 @@ namespace PixelChaser
 
         public virtual void WorldTick(object sender, EventArgs e)
         {
-            LifeTime++;
+
+            if (IsDead)
+            {
+                Dispose();
+            }
+            else
+            {
+                LifeTime++;
+               // CheckProjectileCollisions();
+
+            }
         }
 
 
-        public void EnterWorld(PixelWorld world)
-        {
+        public virtual void EnterWorld(PixelWorld world)
+        {            
             CurrentWorld = world;
             CurrentWorld.MovedDown += WorldTick;
 
@@ -179,6 +222,32 @@ namespace PixelChaser
 
             X = InitialX;
             Y = InitialY;
+
+            CollisionData = new CollisionData(this);
+            CollisionData.NewProjectileCollision += ProjectileCollision;
+
+            if (WorldEntered != null)
+                WorldEntered(this, new EventArgs());
+        }
+
+        private void Entity_WorldEntered(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ProjectileCollision(object sender, EventArgs e)
+        {
+            OnProjectileCollision( (Projectile)sender);
+        }
+
+        public virtual void OnProjectileCollision(Projectile proj)
+        {            
+            proj.EndTargets.Add(ID);
+
+            if(proj.SourceID != ID || VulnerableMyBullets)
+                HP = HP - proj.Damage;
+
+            CurrentWorld.Projectiles.Remove(proj);
         }
 
         public void UpdatePosition()
@@ -243,50 +312,68 @@ namespace PixelChaser
             Y = y;
         }
 
-        public virtual void OnHitRecieved(Projectile projectile)
-        {
-            HP = HP - projectile.Damage;
-            if (HP < 0) 
-                HP = 0;
-        }
-
 
         public void CheckProjectileCollisions()
         {
-            if(EnableProjectileCollisions)
-            for(int i = 0; i < CurrentWorld.Projectiles.Count; i++)
-            {
-                Projectile prj = CurrentWorld.Projectiles[i];
-                bool hit = false;
-
-                hit = hit || xMath.LineIntersectsLine(TL, TR, prj.PTStart, prj.PTEnd);
-                hit = hit || xMath.LineIntersectsLine(TR, BR, prj.PTStart, prj.PTEnd);
-                hit = hit || xMath.LineIntersectsLine(BR, BL, prj.PTStart, prj.PTEnd);
-                hit = hit || xMath.LineIntersectsLine(BL, TL, prj.PTStart, prj.PTEnd);
-
-                if(hit)
+            if (EnableProjectileCollisions)
+                for (int i = 0; i < CurrentWorld.Projectiles.Count; i++)
                 {
-                    HP = HP - prj.Damage;
-                    prj.AddHit(1);
+                        try
+                        {
+                            Projectile prj = CurrentWorld.Projectiles[i];
+                            CollisionData.CheckProjectileCollision(prj);
+                        }
+                        catch { }
+                    
                 }
-            }
         }
 
         private void CheckHits()
         {
-            for (int pr = 0; pr < CurrentWorld.Projectiles.Count; pr++)
+            //for (int pr = 0; pr < CurrentWorld.Projectiles.Count; pr++)
+            //{
+            //    Projectile p = CurrentWorld.Projectiles[pr];
+            //    PointF pt1 = new PointF(p.X, p.Y);
+            //    PointF pt2 = new PointF((p.X + p.Velocity.X), (p.Y + p.Velocity.Y));
+
+            //    int hits = CurrentWorld.PixelUnits.RemoveAll(pu => xMath.LineIntersectsRect(pt1, pt2, pu.GetRectangle()));
+
+            //    if (hits > 0)
+            //    {
+            //        p.AddHit(hits);
+            //    }
+            //}
+        }
+        private bool _disposed = false;
+        private SafeHandle _safeHandle = new SafeFileHandle(IntPtr.Zero, true);
+
+        public void Dispose()
+        {
+            // Dispose of unmanaged resources.
+            Dispose(true);
+            // Suppress finalization.
+            GC.SuppressFinalize(this);
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
             {
-                Projectile p = CurrentWorld.Projectiles[pr];
-                PointF pt1 = new PointF(p.X, p.Y);
-                PointF pt2 = new PointF((p.X + p.Velocity.X), (p.Y + p.Velocity.Y));
-
-                int hits = CurrentWorld.PixelUnits.RemoveAll(pu => xMath.LineIntersectsRect(pt1, pt2, pu.GetRectangle()));
-
-                if (hits > 0)
-                {
-                    p.AddHit(hits);
-                }
+                return;
             }
+
+            if (disposing)
+            {
+                // Dispose managed state (managed objects).
+                if(CurrentWorld.Entities.Contains(this))
+                 CurrentWorld.Entities.Remove(this);
+                this._moveTimer.Dispose();
+                foreach (Gun gun in Arsenal)
+                    gun.Dispose();
+                
+                _safeHandle?.Dispose();
+            }
+
+            _disposed = true;
         }
     }
 }

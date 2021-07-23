@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CollisionData.cs" />
     <Compile Include="xMath.cs" />
     <Compile Include="Chaser.cs" />
     <Compile Include="Enemy.cs" />

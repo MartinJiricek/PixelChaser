@@ -11,8 +11,10 @@ namespace PixelChaser
 {
     public class Chaser:Entity
     {
-        public override string Name { get { return "Chaser"; } }
+        public override string Name { get { return "chaser"; } }
         public override string TypeID { get { return "ChaserDefault"; } }
+        public override string TextureID { get { return "chaser"; } }
+
         public override float InitialX { get { if (CurrentWorld == null) return Width; else return CurrentWorld.Width / 2; } }
         public override float InitialY { get { if (CurrentWorld == null) return Height; else return CurrentWorld.Height / 2; } }
 
@@ -22,18 +24,19 @@ namespace PixelChaser
 
             Arsenal.Clear();
             Arsenal.Add(new SelfUpgraderGun(this));
-            
-            
-            Width = 64;
-            Height = 64;
-            HP = 100;
+
+            Width  = 32;
+            Height = 32;
+            HP = 1000;
             Gun.Range = 1000;
-            Gun.Cooldown = 5;
-            Gun.ProjectileLength = 5;
-            Gun.ProjectileWidth = 5;
+            Gun.Cooldown = 20;
+            Gun.ProjectileLength = 50;
+            Gun.ProjectileWidth = 1f;
+            Gun.ProjectileSpeed = 0.5f;
             Speed = 1.4f;
-            SelectedGun = 0;          
+            SelectedGun = 0;
         }
+
 
         private bool _velocitySwitch = false;
         public override void Move_Tick(object sender, EventArgs e)
@@ -69,8 +72,18 @@ namespace PixelChaser
 
         }
 
+        public override void EnterWorld(PixelWorld world)
+        {
+            base.EnterWorld(world);
+            world.MovedDown += HPCheck;
+            world.SetChaserEntity(this);
+        }
 
-
-
+        public event EventHandler ChaserDied;
+        private void HPCheck(object sender, EventArgs e)
+        {
+            if (HP <= 0 && ChaserDied != null)
+                ChaserDied(this, new EventArgs());
+        }
     }
 }

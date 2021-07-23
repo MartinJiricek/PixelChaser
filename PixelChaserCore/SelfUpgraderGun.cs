@@ -24,7 +24,7 @@ namespace PixelChaser
 
         public override void OnHit(Projectile projectile)
         {
-            Upgrade(projectile.Hits);
+         //   Upgrade(projectile.Hits);
             base.OnHit(projectile);
         }
 

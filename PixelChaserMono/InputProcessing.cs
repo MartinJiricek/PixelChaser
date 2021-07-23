@@ -20,7 +20,6 @@ namespace PixelChaser
                 _moved = true;
                 // _keyDelayTimer.Start();
             }
-
             if (KeysNow.IsKeyDown(Keys.A) && !_keyDelayTimer.Enabled)
             {
                 Chaser.MoveLeft();
@@ -76,7 +75,9 @@ namespace PixelChaser
             }
 
             if (KeysNow.IsKeyDown(Keys.F2))
-                SetEmptyArea();
+
+                if(World.Entities.Count < World.MaxEntityCount)
+                    SetEmptyArea();
 
                 _keysBefore = Keyboard.GetState();
         }

@@ -39,11 +39,18 @@ namespace PixelChaser
             World.MaxUnits = 2000;
 
             _worldTimer = new System.Windows.Forms.Timer();
-            _worldTimer.Interval = 60;
+            _worldTimer.Interval = 1;
             _worldTimer.Tick += World_Tick;
             _worldTimer.Start();
 
+            Chaser.ChaserDied += ChaserDied;
             Chaser.EnterWorld(World);
+        }
+
+        private void ChaserDied(object sender, EventArgs e)
+        {
+            if(ExitOnChaserDied)
+                Exit();
         }
 
         public void SetWorldTickInterval(int interval)
@@ -52,12 +59,10 @@ namespace PixelChaser
                 _worldTimer.Interval = interval;
         }
 
-       
-
-
         private void World_Tick(object sender, System.EventArgs e)
         {
             World.MoveDown();
+            
         }
 
         private void LoadUnitTextures()
@@ -66,11 +71,6 @@ namespace PixelChaser
             {                
                 _units.Add(Content.Load<Texture2D>(name));
             }    
-
-            
         }
-
-
-
     }
 }
