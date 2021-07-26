@@ -11,7 +11,6 @@ namespace PixelChaser
 {
     public class PixelWorld
     {
-        private Thread _collisionChecker;
         public bool CollisionsEnabled { get; set; } = true;
         public string Name { get; set; } = "default";
         public List<PixelUnit> PixelUnits { get; private set; } = new List<PixelUnit>();
@@ -19,6 +18,10 @@ namespace PixelChaser
         public List<Enemy> Enemies { get; private set; } = new List<Enemy>();
         public List<Entity> Entities { get; private set; } = new List<Entity>();
         public Chaser Chaser { get; private set; }
+
+        public Dictionary<string, PWObject> Insiders { get; private set; } = new Dictionary<string, PWObject>();
+
+        public CollisionChecker CollisionChecker { get; private set; }
 
         public List<string> IDList
         {
@@ -85,24 +88,16 @@ namespace PixelChaser
             Width = width;
             Height = height;
             Generator = new PixelGenerator(this);
+            CollisionChecker = new CollisionChecker(this);
 
-            _collisionChecker = new Thread(CollisionCheckLoop);
-            _collisionChecker.IsBackground = true;
-            _collisionChecker.Start();
         }
 
-
-        private void AddTestEnemy()
+        public void AddPWObject(PWObject pwObject )
         {
-            Enemy en = new Enemy();
+            if (Insiders.Keys.Contains(pwObject.ID))
+                return;
 
-            en.Width = 16;
-            en.Height = 16;
-
-            en.X = Width / 3;
-            en.Y = Height / 3;
-
-            en.EnterWorld(this);
+            Insiders.Add(pwObject.ID, pwObject);
         }
 
         public void ClearPixels()
@@ -133,19 +128,12 @@ namespace PixelChaser
                 {
                     PixelUnits.RemoveAll(pu => pu.Y >= Height || pu.Y < 0 || pu.X >= Width || pu.X < 0);
                     Projectiles.RemoveAll(p => p.IsDead);
-                    Entities.RemoveAll(ent => ent.IsDead && ent.TypeID.ToLower() != "chaser");
+                    Entities.RemoveAll(ent => ent.IsDead && ent.TypeName.ToLower() != "chaser");
                 }
                 catch { }
         }
 
-        private void CollisionCheckLoop()
-        {
-            while(true)
-            {
-                if(Entities.Count > 0 && Projectiles.Count > 0)
-                    CheckForProjectileCollisons();
-            }
-        }
+       
 
         public void CheckForProjectileCollisons()
         {

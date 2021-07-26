@@ -11,80 +11,30 @@ using System.Runtime.InteropServices;
 
 namespace PixelChaser
 {
-    public abstract class Entity:IDisposable
+    public abstract class Entity:PWObject,IDisposable,ICollision
     {
 
         public int HP { get; set; } = 1;
-        public PixelWorld CurrentWorld { get; private set; }
-
-        public CollisionData CollisionData { get; private set; }
-        public abstract string Name { get; }
-        public abstract string TypeID { get; }
         public abstract string TextureID { get;}
 
-        public string ID
-        {
-            get
-            {
-                if (_id == "")
-                    _id = Guid.NewGuid().ToString();
-
-                return _id;
-            }
-        }
-
-        private string _id = "";
-
-        public event EventHandler PositionChanged;
-        private float _x = 0;
-        private float _y = 0;
-        public float X
-        {
-            get { return _x; }
-            set
-            {
-                if(value != _x)
-                {
-                    _x = value;
-                    if (PositionChanged != null)
-                        PositionChanged(this, new EventArgs());
-                }    
-
-            }
-        }
-        public float Y
-        {
-            get { return _y; }
-            set
-            {
-                if (value != _y)
-                {
-                    _y = value;
-                    if (PositionChanged != null)
-                        PositionChanged(this, new EventArgs());
-                }
-
-            }
-        }
         public PointF Position
         {
             get
             {
-                return new PointF(_x, _y);
+                return new PointF(X, Y);
             }
             set
             {
-                if(value.X != _x || value.Y != _y)
+                if(value.X != X || value.Y != Y)
                 {
-                    _x = value.X;
-                    _y = value.Y;
+                    X = value.X;
+                    Y = value.Y;
 
-                    if (PositionChanged != null)
-                        PositionChanged(this, new EventArgs());
+                    OnPositionChanged();
                 }
             }
         }
-        public double AimAngle
+        public override double Angle
         {
             get
             {
@@ -103,13 +53,11 @@ namespace PixelChaser
                 if (value != _aimX)
                 {
                     _aimX = value;
-                    if (AimChanged != null)
-                        AimChanged(this, new EventArgs());
+                    OnAngleChanged();
                 }
             }
         }
         private float _aimX = 0;
-        public event EventHandler AimChanged;
         public float AimY
         {
             get { return _aimY; }
@@ -118,14 +66,11 @@ namespace PixelChaser
                 if (value != _aimY)
                 {
                     _aimY = value;
-                    if (AimChanged != null)
-                        AimChanged(this, new EventArgs());
+                    OnAngleChanged();
                 }
             }
         }
         private float _aimY = 0;
-        public float Width { get; set; } = 32;
-        public float Height { get; set; } = 32;
         public int MoveInterval
         {
             get { return _moveTimer.Interval; }
@@ -164,7 +109,6 @@ namespace PixelChaser
             }
         }
         private int _selectedGunIndex = 0;
-        public Velocity Velocity { get; set; } = new Velocity();
         public float AirFactor { get; set; } = 0;
         public int LifeTime { get; private set; } = 0;
         public abstract float InitialX { get; }
@@ -173,8 +117,6 @@ namespace PixelChaser
         public int Hits { get { return Gun.Hits; } }
         public float Speed { get; set; } = 1;
         public bool VulnerableMyBullets { get; set; } = false;
-
-        public event EventHandler WorldEntered;
         public virtual bool IsDead
         {
             get
@@ -209,9 +151,11 @@ namespace PixelChaser
 
 
         public virtual void EnterWorld(PixelWorld world)
-        {            
-            CurrentWorld = world;
-            CurrentWorld.MovedDown += WorldTick;
+        {
+            //World = world;
+            //World.MovedDown += WorldTick;
+
+            LoadWorld(world);
 
             _moveTimer.Tick += Move_Tick;
             _moveTimer.Interval = 1;
@@ -226,8 +170,7 @@ namespace PixelChaser
             CollisionData = new CollisionData(this);
             CollisionData.NewProjectileCollision += ProjectileCollision;
 
-            if (WorldEntered != null)
-                WorldEntered(this, new EventArgs());
+            OnWorldEntered();
         }
 
         private void Entity_WorldEntered(object sender, EventArgs e)
@@ -247,43 +190,12 @@ namespace PixelChaser
             if(proj.SourceID != ID || VulnerableMyBullets)
                 HP = HP - proj.Damage;
 
-            CurrentWorld.Projectiles.Remove(proj);
-        }
-
-        public void UpdatePosition()
-        {
-
-            X = X + Velocity.X;
-            Y = Y + Velocity.Y;
-
-            if (X < 0)
-            {
-                X = 0;
-                Velocity.X = 0;
-            }
-
-            if (X > CurrentWorld.Width)
-            {
-                X = CurrentWorld.Width;
-                Velocity.X = 0;
-            }
-
-            if (Y < 0)
-            {
-                Y = 0;
-                Velocity.Y = 0;
-            }
-
-            if (Y > CurrentWorld.Height)
-            {
-                Y = CurrentWorld.Height;
-                Velocity.Y = 0;
-            }
+            World.Projectiles.Remove(proj);
         }
 
         public virtual void UpdateVelocity()
         {
-            Velocity.AreaDendistyFactor = CurrentWorld.AreaDensityFactor;
+            Velocity.AreaDendistyFactor = World.AreaDensityFactor;
         }
 
         public void MoveUp(float power = 1)
@@ -316,11 +228,11 @@ namespace PixelChaser
         public void CheckProjectileCollisions()
         {
             if (EnableProjectileCollisions)
-                for (int i = 0; i < CurrentWorld.Projectiles.Count; i++)
+                for (int i = 0; i < World.Projectiles.Count; i++)
                 {
                         try
                         {
-                            Projectile prj = CurrentWorld.Projectiles[i];
+                            Projectile prj = World.Projectiles[i];
                             CollisionData.CheckProjectileCollision(prj);
                         }
                         catch { }
@@ -330,13 +242,13 @@ namespace PixelChaser
 
         private void CheckHits()
         {
-            //for (int pr = 0; pr < CurrentWorld.Projectiles.Count; pr++)
+            //for (int pr = 0; pr < World.Projectiles.Count; pr++)
             //{
-            //    Projectile p = CurrentWorld.Projectiles[pr];
+            //    Projectile p = World.Projectiles[pr];
             //    PointF pt1 = new PointF(p.X, p.Y);
             //    PointF pt2 = new PointF((p.X + p.Velocity.X), (p.Y + p.Velocity.Y));
 
-            //    int hits = CurrentWorld.PixelUnits.RemoveAll(pu => xMath.LineIntersectsRect(pt1, pt2, pu.GetRectangle()));
+            //    int hits = World.PixelUnits.RemoveAll(pu => xMath.LineIntersectsRect(pt1, pt2, pu.GetRectangle()));
 
             //    if (hits > 0)
             //    {
@@ -364,8 +276,8 @@ namespace PixelChaser
             if (disposing)
             {
                 // Dispose managed state (managed objects).
-                if(CurrentWorld.Entities.Contains(this))
-                 CurrentWorld.Entities.Remove(this);
+                if(World.Entities.Contains(this))
+                 World.Entities.Remove(this);
                 this._moveTimer.Dispose();
                 foreach (Gun gun in Arsenal)
                     gun.Dispose();

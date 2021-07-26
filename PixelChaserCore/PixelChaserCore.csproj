@@ -44,7 +44,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CollisionChecker.cs" />
     <Compile Include="CollisionData.cs" />
+    <Compile Include="ICollision.cs" />
+    <Compile Include="IObject.cs" />
+    <Compile Include="PWObject.cs" />
+    <Compile Include="SpatialSector.cs" />
     <Compile Include="xMath.cs" />
     <Compile Include="Chaser.cs" />
     <Compile Include="Enemy.cs" />

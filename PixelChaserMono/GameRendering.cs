@@ -4,6 +4,8 @@ using Microsoft.Xna.Framework.Input;
 using MonoGame.Shapes;
 using System;
 using System.Text;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace PixelChaser
@@ -18,11 +20,8 @@ namespace PixelChaser
         private System.Windows.Forms.Timer _keyDelayTimer;
         private int _fps = 0;
         private SpriteFont _infoFont;
-        private Texture2D _cursor;
-        private Texture2D _laserGreen;
-        private Texture2D _chaser;
-        private Texture2D _enemy;
         private RandomGenerator _rdm = new RandomGenerator();
+        private Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>();
         public int FPS { get; private set; }
 
         public int KeyDelay
@@ -96,6 +95,25 @@ namespace PixelChaser
 
         }
 
+        private void LoadTextures()
+        {
+            LoadTexture("CursorBasic");
+            LoadTexture("LaserGreen");
+            LoadTexture("Chaser2");
+            LoadTexture("Enemy1");
+        }
+
+        private void LoadTexture(string textureName)
+        {
+            if (_textures.ContainsKey(textureName))
+                return;
+            try
+            {
+                _textures.Add(textureName, Content.Load<Texture2D>(textureName));
+            }
+            catch { }
+        }
+
         public void UseFullScreenResolution()
         {
             _graphics.PreferredBackBufferWidth = PreSetWidth;
@@ -134,12 +152,8 @@ namespace PixelChaser
             _infoFont = Content.Load<SpriteFont>("DefaultFont");
 
             LoadWorld(new PixelWorld(Window.ClientBounds.Width, Window.ClientBounds.Height));
-            _cursor = Content.Load<Texture2D>("CursorBasic");
-            _laserGreen = Content.Load<Texture2D>("LaserGreen");
-            _chaser = Content.Load<Texture2D>("Chaser2");
-            _enemy = Content.Load<Texture2D>("Enemy1");
 
-            Mouse.SetCursor(MouseCursor.FromTexture2D(_cursor, _cursor.Width / 2, _cursor.Height / 2));
+            Mouse.SetCursor(MouseCursor.FromTexture2D(_textures["CursorBasic"], _textures["CursorBasic"].Width / 2, _textures["CursorBasic"].Height / 2));
             IsMouseVisible = false;
         }
 
@@ -180,16 +194,16 @@ namespace PixelChaser
             {
                 Entity ent = World.Entities[i];
                 if (!ent.IsDead)
-                    switch (ent.TextureID)
+                    switch (ent.TypeName)
                     {
-                        case "":
-                            ent.Draw(_spriteBatch, _enemy);
+                        case "enemy":
+                            ent.Draw(_spriteBatch, _textures[ent.TextureID]);
                             if (DrawAllAimingLines)
                                 _spriteBatch.DrawLine(new Vector2(ent.X, ent.Y), new Vector2(ent.AimX, ent.AimY), Color.Gray, 0.5f);
                             break;
 
                         case "chaser":
-                            ent.Draw(_spriteBatch, _chaser);
+                            ent.Draw(_spriteBatch, _textures[ent.TextureID]);
                             if (DrawChaserAimingLine || DrawAllAimingLines)
                             {
                                 _spriteBatch.DrawLine(new Vector2(ent.X, ent.Y), new Vector2(ent.AimX, ent.AimY), Color.Gray, 0.5f);
@@ -295,7 +309,7 @@ namespace PixelChaser
             sb.AppendLine($"Projectile Speed: {Chaser.Gun.ProjectileSpeed}");
             sb.AppendLine($"Current gun: {Chaser.Gun.Name}");
             sb.AppendLine($"Position: [{Chaser.X}, {Chaser.Y}]   Velocity: [{Chaser.Velocity.X}, {Chaser.Velocity.Y}]");
-            sb.AppendLine($"Aim: [{Chaser.AimX}, {Chaser.AimY}]  Angle: [{Chaser.AimAngle * (180 / Math.PI)}]");
+            sb.AppendLine($"Aim: [{Chaser.AimX}, {Chaser.AimY}]  Angle: [{Chaser.Angle * (180 / Math.PI)}]");
             sb.AppendLine($"Gun Position: [{Chaser.Gun.InitialX}, {Chaser.Gun.InitialY}]");
 
             _spriteBatch.DrawString(_infoFont, sb.ToString(), new Vector2(5, 10), Color.White);
@@ -311,9 +325,6 @@ namespace PixelChaser
                 float y = ent.Y + ent.Height / 2;
 
                 _spriteBatch.DrawString(_infoFont, $"HP: {ent.HP}   HITS: {ent.Hits}", new Vector2(x, y), Color.Red);
-
-
-
             }
 
         }

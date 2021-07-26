@@ -12,11 +12,11 @@ namespace PixelChaser
     public class Chaser:Entity
     {
         public override string Name { get { return "chaser"; } }
-        public override string TypeID { get { return "ChaserDefault"; } }
-        public override string TextureID { get { return "chaser"; } }
+        public override string TypeName { get { return "ChaserDefault"; } }
+        public override string TextureID { get { return "Chaser2"; } }
 
-        public override float InitialX { get { if (CurrentWorld == null) return Width; else return CurrentWorld.Width / 2; } }
-        public override float InitialY { get { if (CurrentWorld == null) return Height; else return CurrentWorld.Height / 2; } }
+        public override float InitialX { get { if (World == null) return Width; else return World.Width / 2; } }
+        public override float InitialY { get { if (World == null) return Height; else return World.Height / 2; } }
 
         public Chaser()
         {
@@ -48,23 +48,23 @@ namespace PixelChaser
 
                 if (Velocity.X > 0)
                 {
-                    Velocity.X = Velocity.X - CurrentWorld.AreaDensityFactor;
+                    Velocity.X = Velocity.X - World.AreaDensityFactor;
                     _velocitySwitch = false;
                 }
                 else if (Velocity.X < 0)
                 {
-                    Velocity.X  = Velocity.X + CurrentWorld.AreaDensityFactor;
+                    Velocity.X  = Velocity.X + World.AreaDensityFactor;
                     _velocitySwitch = false;
                 }
 
                 if (Velocity.Y > 0)
                 {
-                    Velocity.Y = Velocity.Y - CurrentWorld.AreaDensityFactor;
+                    Velocity.Y = Velocity.Y - World.AreaDensityFactor;
                     _velocitySwitch = false;
                 }
                 else if (Velocity.Y < 0)
                 {
-                    Velocity.Y = Velocity.Y + CurrentWorld.AreaDensityFactor;
+                    Velocity.Y = Velocity.Y + World.AreaDensityFactor;
                     _velocitySwitch = false;
                 }
             }

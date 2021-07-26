@@ -34,7 +34,7 @@ namespace PixelChaser
         {
 
             var origin = new Vector2(texture.Width / 2f, texture.Height / 2f);
-            _spriteBatch.Draw(texture, new Rectangle((int)chaser.X, (int)chaser.Y, (int)chaser.Width, (int)chaser.Height), null, Color.White,(float)-chaser.AimAngle, origin, SpriteEffects.FlipVertically, 0f);
+            _spriteBatch.Draw(texture, new Rectangle((int)chaser.X, (int)chaser.Y, (int)chaser.Width, (int)chaser.Height), null, Color.White,(float)-chaser.Angle, origin, SpriteEffects.FlipVertically, 0f);
             _spriteBatch.DrawLine(new Vector2(chaser.AimX, chaser.AimY), new Vector2(chaser.X, chaser.Y), Color.White * 0.4f, 1);
             _spriteBatch.DrawCircle(new Vector2(chaser.AimX, chaser.AimY), 3, 100, Color.White, 2);
 
@@ -43,7 +43,7 @@ namespace PixelChaser
         public static void Draw(this Entity entity, SpriteBatch _spriteBatch, Texture2D texture)
         {
                 var origin = new Vector2(texture.Width / 2f, texture.Height / 2f);
-                _spriteBatch.Draw(texture, new Rectangle((int)entity.X, (int)entity.Y, (int)entity.Width, (int)entity.Height), null, Color.White, (float)-entity.AimAngle, origin, SpriteEffects.FlipVertically, 0f);
+                _spriteBatch.Draw(texture, new Rectangle((int)entity.X, (int)entity.Y, (int)entity.Width, (int)entity.Height), null, Color.White, (float)-entity.Angle, origin, SpriteEffects.FlipVertically, 0f);
 
         }
 

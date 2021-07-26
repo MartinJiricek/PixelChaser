@@ -10,9 +10,9 @@ namespace PixelChaser
 {
     public class Enemy:Entity
     {
-        public override string Name { get { return "EnemyBasic"; } }
-        public override string TypeID { get { return "EnemyBasic"; } }
-        public override string TextureID { get { return ""; } }
+        public override string Name { get { return "Enemy"; } }
+        public override string TypeName { get { return "EnemyBasic"; } }
+        public override string TextureID { get { return "Enemy1"; } }
         public override float InitialX
         {
             get
@@ -21,11 +21,11 @@ namespace PixelChaser
                 switch (SideID)
                 {
                     case 0:
-                        return _rdm.Next((int)(-Width / 2), CurrentWorld.Width + (int)(Width / 2));
+                        return _rdm.Next((int)(-Width / 2), World.Width + (int)(Width / 2));
                     case 1:
-                        return  CurrentWorld.Width + (int)(Width / 2);
+                        return  World.Width + (int)(Width / 2);
                     case 2:
-                        return  _rdm.Next((int)(-Width / 2), CurrentWorld.Width + (int)(Width / 2));
+                        return  _rdm.Next((int)(-Width / 2), World.Width + (int)(Width / 2));
                     case 3:
                         return -(int)(Width / 2);
                 }
@@ -42,12 +42,12 @@ namespace PixelChaser
                     case 0:
                         return -Height / 2;
                     case 1:
-                        return _rdm.Next((int)(-Height / 2), CurrentWorld.Height + (int)(Height / 2));
+                        return _rdm.Next((int)(-Height / 2), World.Height + (int)(Height / 2));
                        
                     case 2:
-                        return Height / 2 + CurrentWorld.Height;
+                        return Height / 2 + World.Height;
                     case 3:
-                        return _rdm.Next((int)(-Height / 2), CurrentWorld.Height + (int)(Height / 2));
+                        return _rdm.Next((int)(-Height / 2), World.Height + (int)(Height / 2));
                 }
                 return 0;
             }
@@ -112,8 +112,8 @@ namespace PixelChaser
         {
             if (_aimCooldownCounter == AimChangeInterval)
             {
-                AimX = CurrentWorld.Chaser.X;
-                AimY = CurrentWorld.Chaser.Y;
+                AimX = World.Chaser.X;
+                AimY = World.Chaser.Y;
                 _aimCooldownCounter = 0;
             }
         }
@@ -139,18 +139,18 @@ namespace PixelChaser
             {
                 case 0:
                     y = -Height / 2;
-                    x = _rdm.Next((int)(-Width / 2), CurrentWorld.Width + (int)(Width / 2));
+                    x = _rdm.Next((int)(-Width / 2), World.Width + (int)(Width / 2));
                     break;
                 case 1:
-                    y = _rdm.Next((int)(-Height / 2), CurrentWorld.Height + (int)(Height/ 2));
-                    x = CurrentWorld.Width + (int)(Width / 2);
+                    y = _rdm.Next((int)(-Height / 2), World.Height + (int)(Height/ 2));
+                    x = World.Width + (int)(Width / 2);
                     break;
                 case 2:
-                    y = Height / 2 + CurrentWorld.Height;
-                    x = _rdm.Next((int)(-Width / 2), CurrentWorld.Width + (int)(Width / 2));
+                    y = Height / 2 + World.Height;
+                    x = _rdm.Next((int)(-Width / 2), World.Width + (int)(Width / 2));
                     break;
                 case 3:
-                    y = _rdm.Next((int)(-Height / 2), CurrentWorld.Height + (int)(Height / 2));
+                    y = _rdm.Next((int)(-Height / 2), World.Height + (int)(Height / 2));
                     x = - (int)(Width / 2);
                     break;
             }

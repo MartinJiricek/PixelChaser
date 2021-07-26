@@ -46,8 +46,8 @@ namespace PixelChaser
             {
                 PointF pt = new PointF();
 
-                double x = Entity.X + (Math.Cos(-Entity.AimAngle + Math.PI / 2) * (Entity.Width / 2 + Offset));
-                double y = Entity.Y + (Math.Sin(-Entity.AimAngle + Math.PI / 2) * (Entity.Height / 2 + Offset));
+                double x = Entity.X + (Math.Cos(-Entity.Angle + Math.PI / 2) * (Entity.Width / 2 + Offset));
+                double y = Entity.Y + (Math.Sin(-Entity.Angle + Math.PI / 2) * (Entity.Height / 2 + Offset));
 
                 pt.X = (float)x;
                 pt.Y = (float)y;
@@ -56,8 +56,8 @@ namespace PixelChaser
             }
         }
 
-        public virtual float InitialX { get { return (float)(Entity.X + (Entity.Width / 2 + Offset) * Math.Sin(-Entity.AimAngle)); } }
-        public virtual float InitialY { get { return (float)(Entity.Y + (Entity.Height/2+Offset) * Math.Cos(-Entity.AimAngle));  } }
+        public virtual float InitialX { get { return (float)(Entity.X + (Entity.Width / 2 + Offset) * Math.Sin(-Entity.Angle)); } }
+        public virtual float InitialY { get { return (float)(Entity.Y + (Entity.Height/2+Offset) * Math.Cos(-Entity.Angle));  } }
         public virtual float Offset { get; set; } = 2;
         public float AimX { get { return Entity.AimX; } }
         public float AimY { get { return Entity.AimY; } }
@@ -94,24 +94,24 @@ namespace PixelChaser
             if (!ReadyToShoot)
                 return;
 
-            Projectile bullet = new Projectile(Entity.CurrentWorld,Entity.TypeID);
+            Projectile bullet = new Projectile(Entity.World,Entity.TypeName);
 
             double dist = Math.Sqrt(Math.Pow(Entity.X - AimX, 2) + Math.Pow(AimY - Entity.Y, 2));
             double lengthFactor = ProjectileLength / dist;
 
-            //bullet.X = (float)((X + Math.Sin(Entity.AimAngle) * Entity.Width / 2) + Position.X);
-            //bullet.Y = (float)((Y + Math.Cos(Entity.AimAngle) * Entity.Height / 2) + Position.Y);
+            //bullet.X = (float)((X + Math.Sin(Entity.Angle) * Entity.Width / 2) + Position.X);
+            //bullet.Y = (float)((Y + Math.Cos(Entity.Angle) * Entity.Height / 2) + Position.Y);
 
             bullet.X = X;
             bullet.Y = Y;
 
-            bullet.Length = ProjectileLength;
+            bullet.Height = ProjectileLength;
             bullet.Width = ProjectileWidth;
 
             bullet.Velocity.X = (float)((AimX - InitialX) * lengthFactor);
             bullet.Velocity.Y = (float)((AimY - InitialY) * lengthFactor);
 
-            bullet.Angle = (float)Entity.AimAngle;
+            bullet.Angle = (float)Entity.Angle;
             bullet.LifetimeDistance = Range;
             bullet.SourceID = Entity.ID;
 
@@ -119,7 +119,7 @@ namespace PixelChaser
             if(Ammo > 0)
                 Ammo--;
 
-            Entity.CurrentWorld.Projectiles.Add(bullet);
+            Entity.World.Projectiles.Add(bullet);
             ResetCooldown();
         }
 

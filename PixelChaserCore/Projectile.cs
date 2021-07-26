@@ -7,13 +7,8 @@ using System.Drawing;
 
 namespace PixelChaser
 {
-    public class Projectile
+    public class Projectile :PWObject,ICollision,IObject
     {
-        public string SourceID { get; set; }
-        public float X { get; set; }
-        public float Y { get; set; }
-        public Velocity Velocity { get; set; } = new Velocity();
-        public PixelWorld World { get; private set; }
         public int Hits { get; set; } = 0;
         public int MaxHits { get; set; } = 1;
         public bool IsDead
@@ -33,15 +28,11 @@ namespace PixelChaser
             }
         }
         public float PowerFactor { get; set; } = 1;
-        public float Length { get; set; } = 10;
-        public float Width { get; set; } = 3;
         public int Damage { get; set; } = 1;
         public double LifetimeDistance { get; set; } = 400;
         public double TotalDistance { get; private set; } = 0;
 
         public List<string> EndTargets { get; private set; } = new List<string>();
-
-        public float Angle { get; set; }
 
 
         public PointF PTStart
@@ -62,44 +53,22 @@ namespace PixelChaser
         public Projectile(PixelWorld world, string sourceID)
         {
             SourceID = SourceID;
+            CollisionData = new CollisionData(this);
             LoadWorld(world);
         }
-
-        public void LoadWorld(PixelWorld world)
-        {
-            World = world;
-            World.MovedDown += Tick;
-           // Velocity.AreaDendistyFactor = World.AreaDensityFactor;
-
-        }
-
         private void Tick(object sender, EventArgs e)
         {
             UpdatePosition();
         }
 
         public Projectile(PixelWorld world ,float x, float y)
-        { 
-            World = world;
-            World.MovedDown += Tick;
+        {
+            LoadWorld(world);
+
             X = x;
             Y = y; 
         }
 
-        public void UpdatePosition()
-        {
-            X = X + (Velocity.X * PowerFactor);
-            Y = Y + (Velocity.Y* PowerFactor);
-
-            double distance = Math.Sqrt(Math.Pow(Velocity.X * PowerFactor, 2)+Math.Pow(Velocity.Y * PowerFactor, 2));
-
-            TotalDistance = TotalDistance + distance;
-        }
-
-        public float GetDistanceFrom(PointF pt)
-        {
-            return (float) Math.Sqrt(Math.Pow(pt.X - X, 2) + Math.Pow(pt.Y - Y, 2));
-        }
 
 
 

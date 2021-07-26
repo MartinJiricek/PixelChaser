@@ -45,18 +45,18 @@ namespace PixelChaser
         private List<PointF> _originPoints = new List<PointF>();
         private List<PointF> _rotatedPoints = new List<PointF>();
 
-        private Entity _entity;
+        private IObject _parent;
         
-        public PointF C { get { return new PointF(_entity.X, _entity.Y); } }
+        public PointF C { get { return new PointF(_parent.X, _parent.Y); } }
 
         public event EventHandler NewProjectileCollision;
 
-        public CollisionData(Entity entity)
+        public CollisionData(IObject parent)
         {
-            _entity = entity;
-            _entity.AimChanged += RotationChanged;
-            _entity.PositionChanged += PositionChanged;
-            _entity.WorldEntered += WorldEntered;
+            _parent = parent;
+            _parent.AngleChanged += RotationChanged;
+            _parent.PositionChanged += PositionChanged;
+            _parent.WorldEntered += WorldEntered;
             SetEntityTriangle();
             
         }
@@ -69,12 +69,12 @@ namespace PixelChaser
 
         private void PositionChanged(object sender, EventArgs e)
         {
-            Rotate(_entity.AimAngle);
+            Rotate(_parent.Angle);
         }
 
         private void RotationChanged(object sender, EventArgs e)
         {
-            Rotate(_entity.AimAngle);
+            Rotate(_parent.Angle);
         }
 
         public void Clear()
@@ -153,10 +153,10 @@ namespace PixelChaser
         {
             Clear();
 
-            PointF pt1 = new PointF(-_entity.Width / 2, -_entity.Height / 2);
-            PointF pt2 = new PointF(_entity.Width / 2, -_entity.Height / 2);
-            PointF pt3 = new PointF(_entity.Width / 2, +_entity.Height / 2);
-            PointF pt4 = new PointF(-_entity.Width / 2, +_entity.Height / 2);
+            PointF pt1 = new PointF(-_parent.Width / 2, -_parent.Height / 2);
+            PointF pt2 = new PointF(_parent.Width / 2, -_parent.Height / 2);
+            PointF pt3 = new PointF(_parent.Width / 2, +_parent.Height / 2);
+            PointF pt4 = new PointF(-_parent.Width / 2, +_parent.Height / 2);
 
             AddPoint(pt1);
             AddPoint(pt2);
@@ -168,9 +168,9 @@ namespace PixelChaser
         {
             Clear();
 
-            PointF pt1 = new PointF(0, -_entity.Height / 2);
-            PointF pt3 = new PointF(_entity.Width / 2, _entity.Height / 2);
-            PointF pt4 = new PointF(-_entity.Width / 2, _entity.Height / 2);
+            PointF pt1 = new PointF(0, -_parent.Height / 2);
+            PointF pt3 = new PointF(_parent.Width / 2, _parent.Height / 2);
+            PointF pt4 = new PointF(-_parent.Width / 2, _parent.Height / 2);
 
             AddPoint(pt1);
             AddPoint(pt3);
